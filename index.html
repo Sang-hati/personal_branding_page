@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Developer dashboard</title>
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Newsreader:ital,opsz,wght@1,6..72,400..500&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/theme.js"></script>
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="page">
+    <div class="bar">
+      <button type="button" class="btn" id="btn-refresh">Refresh data</button>
+      <button type="button" class="btn" id="btn-settings">Settings</button>
+    </div>
+
+    <div id="banner" class="banner" role="status" hidden></div>
+
+    <main id="main">
+      <p id="loading" class="loading" role="status">Loading your GitHub data…</p>
+
+      <section id="setup" class="notice" hidden aria-labelledby="setup-title">
+        <h2 id="setup-title">Which GitHub account should this show?</h2>
+        <form id="setup-form" class="inline-form">
+          <label class="field-label" for="setup-user">GitHub username</label>
+          <div class="inline-row">
+            <input id="setup-user" name="username" type="text" autocomplete="off" spellcheck="false" maxlength="39" required>
+            <button type="submit" class="btn primary">Load dashboard</button>
+          </div>
+          <p class="hint">You can change this later in Settings.</p>
+        </form>
+      </section>
+
+      <section id="error" class="notice" hidden role="alert" aria-labelledby="error-title">
+        <h2 id="error-title"></h2>
+        <p id="error-body"></p>
+        <div class="notice-actions">
+          <button type="button" class="btn primary" id="error-retry">Try again</button>
+          <button type="button" class="btn" id="error-settings">Open settings</button>
+        </div>
+      </section>
+
+      <div id="content" hidden>
+        <header class="masthead">
+          <h1 id="name"></h1>
+          <div class="identity">
+            <div class="avatar" id="avatar" aria-hidden="true"></div>
+            <div class="identity-text">
+              <p class="handle"><a id="handle" target="_blank" rel="noopener noreferrer"></a></p>
+              <p class="bio" id="bio"></p>
+              <ul class="facts" id="facts"></ul>
+            </div>
+          </div>
+        </header>
+
+        <section id="activity" class="panel activity" aria-labelledby="activity-title">
+          <div class="activity-head">
+            <h2 id="activity-title"></h2>
+            <div class="seg" role="group" aria-label="Contribution view">
+              <button type="button" data-view="grid" aria-pressed="true">Grid</button>
+              <button type="button" data-view="table" aria-pressed="false">Monthly table</button>
+            </div>
+          </div>
+          <div class="heat-scroll" id="heat-scroll"><div id="heat"></div></div>
+          <div id="heat-table" hidden></div>
+          <div class="legend" id="legend" aria-hidden="true">
+            <span>Less</span>
+            <span class="sw l0"></span><span class="sw l1"></span><span class="sw l2"></span><span class="sw l3"></span><span class="sw l4"></span>
+            <span>More</span>
+          </div>
+          <div class="streaks" id="streaks"></div>
+        </section>
+
+        <section id="languages" class="languages" aria-labelledby="languages-title" hidden></section>
+
+        <section id="repos" class="repos" aria-labelledby="repos-title">
+          <div class="repos-head">
+            <h2 id="repos-title">Repositories</h2>
+            <div class="controls">
+              <input id="q" type="search" placeholder="Search repositories" aria-label="Search repositories" autocomplete="off">
+              <select id="lang" aria-label="Filter by language"></select>
+              <select id="sort" aria-label="Sort repositories">
+                <option value="stars">Most stars</option>
+                <option value="forks">Most forks</option>
+                <option value="updated">Recently pushed</option>
+                <option value="name">Name</option>
+              </select>
+            </div>
+          </div>
+          <div id="repo-grid" class="repo-grid"></div>
+          <div class="repos-foot">
+            <p id="repos-count" class="count" aria-live="polite"></p>
+            <button type="button" class="btn" id="more" hidden></button>
+          </div>
+        </section>
+
+        <footer class="foot" id="foot"></footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form">
+      <h2 id="settings-title">Settings</h2>
+
+      <label class="row"><span>GitHub username</span>
+        <input name="username" type="text" autocomplete="off" spellcheck="false" maxlength="39" pattern="[A-Za-z0-9](?:[A-Za-z0-9\-]{0,38})">
+      </label>
+      <label class="row"><span>Appearance</span>
+        <select name="theme">
+          <option value="auto">Match system</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+      <label class="row"><span>Repositories shown at first</span>
+        <input name="maxRepos" type="number" min="3" max="60" step="1">
+      </label>
+      <label class="check"><input type="checkbox" name="hideForks"><span>Hide forked repositories</span></label>
+      <label class="check"><input type="checkbox" name="hideArchived"><span>Hide archived repositories</span></label>
+
+      <fieldset>
+        <legend>Cache lifetime in minutes</legend>
+        <label class="row"><span>Profile</span><input name="ttlProfileMin" type="number" min="1" max="1440" step="1"></label>
+        <label class="row"><span>Repositories</span><input name="ttlReposMin" type="number" min="1" max="1440" step="1"></label>
+        <label class="row"><span>Contributions</span><input name="ttlContribMin" type="number" min="1" max="1440" step="1"></label>
+      </fieldset>
+
+      <p class="hint" id="settings-source"></p>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="clear-cache">Clear cached data</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="settings-cancel">Cancel</button>
+        <button type="submit" class="btn primary">Save settings</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="tip" class="tip" role="tooltip" hidden></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
